@@ -15,4 +15,8 @@
     <string name="load_app_download_string">LoadApp - Current repository by Udacity</string>
     <string name="retrofit_download_string">Retrofit -Type-safe HTTP client for Android and Java by Square, Inc</string>
     <string name="loadapp_image_description">LoadApp image</string>
+    <string name="file_name_title">File name:</string>
+    <string name="status_title">Status: </string>
+    <string name="ok">OK</string>
+    <string name="success">Success</string>
 </resources>
