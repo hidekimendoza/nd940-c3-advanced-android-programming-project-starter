@@ -21,6 +21,7 @@
         app:srcCompat="@drawable/ic_baseline_cloud_download_24" />
 
     <RadioGroup
+        android:id="@+id/radio_group"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="@dimen/default_padding"

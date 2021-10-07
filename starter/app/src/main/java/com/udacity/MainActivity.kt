@@ -11,28 +11,59 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
+import com.udacity.databinding.ActivityMainBinding
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.content_main.*
 
+data class Repo(
+    val url: String,
+    val name: String
+)
 
 class MainActivity : AppCompatActivity() {
 
     private var downloadID: Long = 0
 
+    private var selectedRepo: Repo? = null
+
     private lateinit var notificationManager: NotificationManager
     private lateinit var pendingIntent: PendingIntent
     private lateinit var action: NotificationCompat.Action
 
+    private lateinit var binding: ActivityMainBinding
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
         setSupportActionBar(toolbar)
+
+        binding.contentMain.apply {
+            customButton.setOnClickListener { download()  }
+
+            radioGroup.setOnCheckedChangeListener { group, checkedId ->
+                when(checkedId){
+                    R.id.glide_download_radiobutton -> selectedRepo = Repo(
+                        "https://github.com/bumptech/glide",
+                        R.string.glide_download_string.toString()
+                    )
+                    R.id.loadApp_download_radiobutton -> selectedRepo = Repo(
+                        "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter",
+                        R.string.load_app_download_string.toString()
+                    )
+                    R.id.retrofit_download_radiobutton -> selectedRepo = Repo(
+                        "https://github.com/square/retrofit",
+                        R.string.retrofit_download_string.toString()
+                    )
+                    else -> selectedRepo = null
+                }
+            }
+        }
 
         registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
 
-        custom_button.setOnClickListener {
-            download()
-        }
+
     }
 
     private val receiver = object : BroadcastReceiver() {

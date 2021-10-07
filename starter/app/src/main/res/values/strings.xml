@@ -18,5 +18,9 @@
     <string name="file_name_title">File name:</string>
     <string name="status_title">Status: </string>
     <string name="ok">OK</string>
-    <string name="success">Success</string>
+    <string name="downloading">We are downloading </string>
+    <string name="success">Success </string>
+    <string name="download">Download </string>
+
+    <string name="selection_missing">Please select the file to download </string>
 </resources>
