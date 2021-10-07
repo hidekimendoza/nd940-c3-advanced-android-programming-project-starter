@@ -21,12 +21,21 @@ class LoadingButton @JvmOverloads constructor(
 
     private var currentText: String = ""
 
-    private val valueAnimator = ValueAnimator()
+    private var valueAnimator = ValueAnimator()
 
+    private var progress: Float = 0f
+
+    private var loadingBackgroundRect = Rect()
 
     private val messageRect = Rect()
 
     private val backgroundRect = Rect()
+
+    private val loadingBackgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = ResourcesCompat.getColor(resources, R.color.colorPrimaryDark, null)
+    }
+
 
     private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
@@ -36,7 +45,7 @@ class LoadingButton @JvmOverloads constructor(
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
         textAlign = Paint.Align.CENTER
-        color = Color.BLACK
+        color = Color.WHITE
         typeface = Typeface.create("", Typeface.BOLD)
     }
 
@@ -50,15 +59,30 @@ class LoadingButton @JvmOverloads constructor(
         Log.i("LoadingButton", buttonState.toString())
         when (new) {
             ButtonState.Loading -> {
+                progress = 0f
                 currentText = context.getString(R.string.downloading)
+                valueAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+                    duration = 2000 // same duration as toast short
+                    repeatCount = ValueAnimator.INFINITE
 
+                    addUpdateListener {
+                        progress = animatedValue as Float
+                        invalidate()
+                    }
+                    start()
+                }
+                this.isEnabled = false
             }
             ButtonState.Completed -> {
                 currentText = context.getString(R.string.download)
+                this.isEnabled = true
+                progress = 0f
 
             }
             else -> {
-                currentText = "blah"
+                currentText = ""
+                progress = 0f
+                this.isEnabled = true
             }
         }
         invalidate()
@@ -79,15 +103,10 @@ class LoadingButton @JvmOverloads constructor(
         super.onDraw(canvas)
         // Draw background
         canvas?.drawRect(backgroundRect, backgroundPaint)
-        // Draw text
-        canvas?.drawText(
-            currentText,
-            widthSize / 2f,
-            ((heightSize + textPaint.textSize) / 2f),
-            textPaint
-        )
-
         if (buttonState == ButtonState.Loading) {
+            // Draw loading background rectangle
+            loadingBackgroundRect.set(0, 0, (widthSize * progress).toInt(), heightSize)
+            canvas?.drawRect(loadingBackgroundRect, loadingBackgroundPaint)
             // Draw arc
             textPaint.getTextBounds(currentText, 0, currentText.length, messageRect)
             canvas?.drawArc(
@@ -96,11 +115,18 @@ class LoadingButton @JvmOverloads constructor(
                 widthSize / 2f + messageRect.width() / 2f + padding + min(widthSize, heightSize),
                 heightSize.toFloat() - padding,
                 0f,
-                360f,
+                360 * progress,
                 true,
                 loadingArcPaint
             )
         }
+        // Draw text
+        canvas?.drawText(
+            currentText,
+            widthSize / 2f,
+            ((heightSize + textPaint.textSize) / 2f),
+            textPaint
+        )
 
     }
 
@@ -127,4 +153,5 @@ class LoadingButton @JvmOverloads constructor(
         invalidate()
         return true
     }
+
 }
