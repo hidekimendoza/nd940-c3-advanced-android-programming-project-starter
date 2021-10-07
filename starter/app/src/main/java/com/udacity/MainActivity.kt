@@ -9,6 +9,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import com.udacity.databinding.ActivityMainBinding
@@ -40,10 +42,21 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         binding.contentMain.apply {
-            customButton.setOnClickListener { download()  }
+            customButton.setOnClickListener {
+                Log.i("MainActivity", "Custom button pressed")
+                if (radioGroup.checkedRadioButtonId == -1) {
+                    Toast.makeText(
+                        applicationContext, "Please select the file to download",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    download()
+
+                }
+            }
 
             radioGroup.setOnCheckedChangeListener { group, checkedId ->
-                when(checkedId){
+                when (checkedId) {
                     R.id.glide_download_radiobutton -> selectedRepo = Repo(
                         "https://github.com/bumptech/glide",
                         R.string.glide_download_string.toString()
@@ -60,6 +73,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        binding.contentMain.customButton.setState(ButtonState.Completed)
 
         registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
 
@@ -73,6 +87,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun download() {
+        binding.contentMain.customButton.setState(ButtonState.Loading)
         val request =
             DownloadManager.Request(Uri.parse(URL))
                 .setTitle(getString(R.string.app_name))
