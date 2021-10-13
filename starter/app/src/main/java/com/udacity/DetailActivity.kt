@@ -2,6 +2,7 @@ package com.udacity
 
 import android.app.NotificationManager
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -31,6 +32,13 @@ class DetailActivity : AppCompatActivity() {
 
             binding.contentDetail.fileName.text = url
             binding.contentDetail.statusText.text = status
+            if(status == "Succeed"){
+                binding.contentDetail.statusText.setTextColor(Color.GREEN)
+            }
+            else
+            {
+                binding.contentDetail.statusText.setTextColor(Color.RED)
+            }
         }
 
         val notificationManager = ContextCompat.getSystemService(
