@@ -6,6 +6,7 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
+import androidx.core.animation.doOnEnd
 import androidx.core.content.res.ResourcesCompat
 import kotlin.math.min
 import kotlin.properties.Delegates
@@ -79,10 +80,28 @@ class LoadingButton @JvmOverloads constructor(
                 progress = 0f
 
             }
-            else -> {
-                currentText = ""
+            ButtonState.Clicked -> {
                 progress = 0f
-                this.isEnabled = true
+                currentText = context.getString(R.string.downloading)
+                valueAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+                    duration = 2000 // same duration as toast short
+                    repeatCount = 0
+
+                    addUpdateListener {
+                        progress = animatedValue as Float
+                        invalidate()
+                    }
+                    this.doOnEnd {
+                        Log.i(
+                            "ButtonState",
+                            "Button clicked animation ended, moving to complete status"
+                        )
+                        buttonState = ButtonState.Completed
+                    }
+                    start()
+                }
+                this.isEnabled = false
+
             }
         }
         invalidate()
@@ -103,7 +122,7 @@ class LoadingButton @JvmOverloads constructor(
         super.onDraw(canvas)
         // Draw background
         canvas?.drawRect(backgroundRect, backgroundPaint)
-        if (buttonState == ButtonState.Loading) {
+        if (buttonState == ButtonState.Loading || buttonState == ButtonState.Clicked) {
             // Draw loading background rectangle
             loadingBackgroundRect.set(0, 0, (widthSize * progress).toInt(), heightSize)
             canvas?.drawRect(loadingBackgroundRect, loadingBackgroundPaint)

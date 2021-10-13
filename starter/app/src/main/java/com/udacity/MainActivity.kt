@@ -46,11 +46,13 @@ class MainActivity : AppCompatActivity() {
         binding.contentMain.apply {
             customButton.setOnClickListener {
                 Log.i("MainActivity", "Custom button pressed")
+
                 if (radioGroup.checkedRadioButtonId == -1) {
                     Toast.makeText(
                         applicationContext, "Please select the file to download",
                         Toast.LENGTH_SHORT
                     ).show()
+                    customButton.setState(ButtonState.Clicked)
                 } else {
                     notificationManager = ContextCompat.getSystemService(
                         applicationContext,
@@ -106,7 +108,9 @@ class MainActivity : AppCompatActivity() {
                             downloadCursor.getInt(downloadCursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
                         if (status == DownloadManager.STATUS_SUCCESSFUL) {
 
-                            val url = downloadCursor.getString(downloadCursor.getColumnIndex(DownloadManager.COLUMN_TITLE))
+                            val url = downloadCursor.getString(
+                                downloadCursor.getColumnIndex(DownloadManager.COLUMN_TITLE)
+                            )
                             Log.i("onReceiver", "Download status succeed: $url")
                             notificationManager.sendNotification(
                                 application.getString(R.string.notification_description),
@@ -123,7 +127,11 @@ class MainActivity : AppCompatActivity() {
                             notificationManager.sendNotification(
                                 application.getString(R.string.notification_description),
                                 applicationContext,
-                                downloadCursor.getString(downloadCursor.getColumnIndex(DownloadManager.COLUMN_TITLE)),
+                                downloadCursor.getString(
+                                    downloadCursor.getColumnIndex(
+                                        DownloadManager.COLUMN_TITLE
+                                    )
+                                ),
                                 "Fail"
                             )
                             binding.contentMain.customButton.setState(ButtonState.Completed)

@@ -6,16 +6,17 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.core.app.TaskStackBuilder
 
 // Notification ID.
 private val NOTIFICATION_ID = 0
 
-fun NotificationManager.sendNotification(messageBody: String, applicationContext: Context,
-                                         url:String = "",
-                                         status: String = "") {
+fun NotificationManager.sendNotification(
+    messageBody: String, applicationContext: Context,
+    url: String = "",
+    status: String = ""
+) {
 
-    val contentIntent = Intent(applicationContext,  MainActivity::class.java)
+    val contentIntent = Intent(applicationContext, MainActivity::class.java)
     val contentPendingIntent = PendingIntent.getActivity(
         applicationContext,
         NOTIFICATION_ID,
@@ -25,7 +26,7 @@ fun NotificationManager.sendNotification(messageBody: String, applicationContext
 
     val detailIntent = Intent(applicationContext, DetailActivity::class.java).apply {
         Log.i("sendNotification", "url -> $url")
-        this.putExtra("URL", url)
+        this.putExtra("URL", url.toString())
         this.putExtra("STATUS", status)
     }
 
@@ -33,13 +34,14 @@ fun NotificationManager.sendNotification(messageBody: String, applicationContext
         applicationContext,
         NOTIFICATION_ID,
         detailIntent,
-        0
+        PendingIntent.FLAG_UPDATE_CURRENT
     )
 
     val action = NotificationCompat.Action.Builder(
         0,
         applicationContext.getText(R.string.notification_button),
-        detailPendingIntent)
+        detailPendingIntent
+    )
         .build()
 
     val builder = NotificationCompat.Builder(
