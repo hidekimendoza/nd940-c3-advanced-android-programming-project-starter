@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -40,7 +41,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setSupportActionBar(toolbar)
 
         binding.contentMain.apply {
@@ -65,18 +65,19 @@ class MainActivity : AppCompatActivity() {
                 when (checkedId) {
                     R.id.glide_download_radiobutton -> selectedRepo = Repo(
                         "https://github.com/bumptech/glide",
-                        R.string.glide_download_string.toString()
+                        application.getString(R.string.glide_download_string)
                     )
                     R.id.loadApp_download_radiobutton -> selectedRepo = Repo(
                         "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter",
-                        R.string.load_app_download_string.toString()
+                        application.getString(R.string.load_app_download_string)
                     )
                     R.id.retrofit_download_radiobutton -> selectedRepo = Repo(
                         "https://github.com/square/retrofit",
-                        R.string.retrofit_download_string.toString()
+                        application.getString(R.string.retrofit_download_string)
                     )
                     else -> selectedRepo = null
                 }
+                Log.i("setOnCheckedChangeListener", "$selectedRepo")
             }
         }
         binding.contentMain.customButton.setState(ButtonState.Completed)
@@ -90,22 +91,65 @@ class MainActivity : AppCompatActivity() {
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-            notificationManager.sendNotification(
-                application.getString(R.string.notification_description),
-                applicationContext
-            )
-            Log.i("MainActivity", "OnReceive called with Download id $notificationManager")
-            binding.contentMain.customButton.setState(ButtonState.Completed)
 
+            id?.let {
+                if (id == downloadID) {
+                    // Download matches the expected ID
+                    Log.i("onReceive", "Download manager received expected ID $downloadID")
+                    val downloadQuery = DownloadManager.Query().setFilterById(id)
+                    val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+                    val downloadCursor: Cursor = downloadManager.query(downloadQuery)
+
+                    if (downloadCursor.moveToFirst()) {
+                        // Cursor is not empty
+                        val status =
+                            downloadCursor.getInt(downloadCursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
+                        if (status == DownloadManager.STATUS_SUCCESSFUL) {
+
+                            val url = downloadCursor.getString(downloadCursor.getColumnIndex(DownloadManager.COLUMN_TITLE))
+                            Log.i("onReceiver", "Download status succeed: $url")
+                            notificationManager.sendNotification(
+                                application.getString(R.string.notification_description),
+                                applicationContext,
+                                url,
+                                "Succeed"
+                            )
+                            binding.contentMain.customButton.setState(ButtonState.Completed)
+                        } else {
+                            Log.i(
+                                "onReceiver",
+                                "Download status is not succeed, Column status code: $status"
+                            )
+                            notificationManager.sendNotification(
+                                application.getString(R.string.notification_description),
+                                applicationContext,
+                                downloadCursor.getString(downloadCursor.getColumnIndex(DownloadManager.COLUMN_TITLE)),
+                                "Fail"
+                            )
+                            binding.contentMain.customButton.setState(ButtonState.Completed)
+                        }
+                    } else {
+                        Log.i("onReceiver", "Download Cursor is empty for querying id $downloadID")
+                        binding.contentMain.customButton.setState(ButtonState.Completed)
+                    }
+
+                } else {
+                    Log.i(
+                        "onReceive",
+                        "Download manager received other ID: $id, expected $downloadID"
+                    )
+                }
+            }
         }
     }
 
     private fun download() {
         binding.contentMain.customButton.setState(ButtonState.Loading)
+        Log.i("download", "Selected repo: $selectedRepo")
         selectedRepo?.let {
             val request =
-                DownloadManager.Request(Uri.parse(selectedRepo!!.url))
-                    .setTitle(selectedRepo!!.name)
+                DownloadManager.Request(Uri.parse(it.url + "/archive/master.zip"))
+                    .setTitle(it.name)
                     .setDescription(getString(R.string.app_description))
                     .setRequiresCharging(false)
                     .setAllowedOverMetered(true)
@@ -115,11 +159,5 @@ class MainActivity : AppCompatActivity() {
             downloadID =
                 downloadManager.enqueue(request)// enqueue puts the download request in the queue.
         }
-    }
-
-    companion object {
-        private const val URL =
-            "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter/archive/master.zip"
-        private const val CHANNEL_ID = R.string.channel_id.toString()
     }
 }
